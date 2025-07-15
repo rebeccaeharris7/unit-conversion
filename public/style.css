@@ -1,0 +1,39 @@
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  padding: 2em;
+}
+
+h1 {
+  color: #2c3e50;
+}
+
+form {
+  background: #fff;
+  padding: 1em;
+  border-radius: 5px;
+  margin-bottom: 1.5em;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+label {
+  margin-right: 1em;
+}
+
+#result {
+  font-weight: bold;
+  margin: 1em 0;
+}
+
+#history {
+  background: #fff;
+  padding: 1em;
+  border-radius: 5px;
+  list-style-type: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+#history li {
+  margin-bottom: .3em;
+  font-size: 0.95em;
+}

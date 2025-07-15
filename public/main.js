@@ -1,122 +1,67 @@
-// --- Define supported units ---
+// Units for each type
 const units = {
-    length: [
-        { label: "Meters", value: "meter" },
-        { label: "Kilometers", value: "kilometer" },
-        { label: "Feet", value: "foot" },
-        { label: "Miles", value: "mile" }
-    ],
-    volume: [
-        { label: "Liters", value: "liter" },
-        { label: "Milliliters", value: "milliliter" },
-        { label: "Cups", value: "cup" },
-        { label: "Gallons", value: "gallon" }
-    ]
+  length: ["meter", "kilometer", "foot", "mile"],
+  volume: ["liter", "milliliter", "cup", "gallon"]
 };
 
-const typeSelect = document.getElementById("type");
-const fromUnitSelect = document.getElementById("fromUnit");
-const toUnitSelect = document.getElementById("toUnit");
-const fromValueInput = document.getElementById("fromValue");
-const toValueInput = document.getElementById("toValue");
-
-let lastChanged = null; // Track which field was last changed to avoid loop
-
-// --- Populate unit dropdowns based on type ---
-function populateUnitDropdowns(type) {
-    fromUnitSelect.innerHTML = "";
-    toUnitSelect.innerHTML = "";
-    units[type].forEach(unit => {
-        const option1 = document.createElement("option");
-        option1.value = unit.value;
-        option1.textContent = unit.label;
-        fromUnitSelect.appendChild(option1);
-
-        const option2 = document.createElement("option");
-        option2.value = unit.value;
-        option2.textContent = unit.label;
-        toUnitSelect.appendChild(option2);
-    });
-    // Default: different units selected
-    toUnitSelect.selectedIndex = 1;
+function populateUnitOptions(type) {
+  const fromSelect = document.getElementById('fromUnit');
+  const toSelect = document.getElementById('toUnit');
+  fromSelect.innerHTML = '';
+  toSelect.innerHTML = '';
+  units[type].forEach(unit => {
+    fromSelect.innerHTML += `<option value="${unit}">${unit}</option>`;
+    toSelect.innerHTML += `<option value="${unit}">${unit}</option>`;
+  });
+  toSelect.selectedIndex = 1; // default to second unit for "to"
 }
 
-// --- Conversion handler ---
-async function handleConversion(direction) {
-    // direction: "from" means user changed the "from" field; "to" = changed "to" field
-    lastChanged = direction;
+// Handle type change
+document.getElementById('type').addEventListener('change', e => {
+  populateUnitOptions(e.target.value);
+});
 
-    let fromValue = parseFloat(fromValueInput.value);
-    let toValue = parseFloat(toValueInput.value);
+// Initial options
+populateUnitOptions('length');
 
-    const payload = {
-        type: typeSelect.value,
-        fromUnit: fromUnitSelect.value,
-        toUnit: toUnitSelect.value,
-        value: direction === "from" ? fromValue : toValue,
-        direction // tells backend which direction
-    };
+// Handle form submit
+document.getElementById('convert-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const type = document.getElementById('type').value;
+  const fromUnit = document.getElementById('fromUnit').value;
+  const toUnit = document.getElementById('toUnit').value;
+  const value = parseFloat(document.getElementById('value').value);
 
-    // Only send if input is not empty
-    if (isNaN(payload.value)) {
-        if (direction === "from") toValueInput.value = "";
-        else fromValueInput.value = "";
-        return;
-    }
+  if (fromUnit === toUnit) {
+    document.getElementById('result').textContent = "Please choose different units.";
+    return;
+  }
 
-    try {
-        const res = await fetch("/api/convert", {
-            method: "POST",
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-        if (direction === "from") {
-            toValueInput.value = data.result;
-        } else {
-            fromValueInput.value = data.result;
-        }
-    } catch (e) {
-        // Optionally display error
-        console.error("Conversion error:", e);
-    }
+  const direction = "from"; // could add UI for reverse, but always 'from' here
+
+  const response = await fetch('/api/convert', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ type, fromUnit, toUnit, value, direction })
+  });
+  const data = await response.json();
+  if (data.error) {
+    document.getElementById('result').textContent = "Error: " + data.error;
+  } else {
+    document.getElementById('result').textContent = `${value} ${fromUnit} = ${data.result} ${toUnit}`;
+    fetchHistory();
+  }
+});
+
+// Fetch and show history
+async function fetchHistory() {
+  const res = await fetch('/api/history');
+  const data = await res.json();
+  const el = document.getElementById('history');
+  el.innerHTML = data.history.map(row =>
+    `<li>[${row.ts}] ${row.inputValue} ${row.fromUnit} &rarr; ${row.result} ${row.toUnit} (${row.type})</li>`
+  ).join('');
 }
 
-// --- Event listeners ---
-
-// Re-populate units when type changes
-typeSelect.addEventListener("change", () => {
-    populateUnitDropdowns(typeSelect.value);
-    // Trigger a conversion to update the fields
-    fromValueInput.value = "";
-    toValueInput.value = "";
-});
-
-// Listen for changes on "from" value/unit
-fromValueInput.addEventListener("input", () => {
-    if (lastChanged === "to") return; // Prevent loop
-    handleConversion("from");
-});
-fromUnitSelect.addEventListener("change", () => {
-    if (lastChanged === "to") return;
-    handleConversion("from");
-});
-
-// Listen for changes on "to" value/unit
-toValueInput.addEventListener("input", () => {
-    if (lastChanged === "from") return;
-    handleConversion("to");
-});
-toUnitSelect.addEventListener("change", () => {
-    if (lastChanged === "from") return;
-    handleConversion("to");
-});
-
-// On blur, reset lastChanged (so changing fields after switching is not blocked)
-fromValueInput.addEventListener("blur", () => { lastChanged = null; });
-toValueInput.addEventListener("blur", () => { lastChanged = null; });
-fromUnitSelect.addEventListener("blur", () => { lastChanged = null; });
-toUnitSelect.addEventListener("blur", () => { lastChanged = null; });
-
-// --- Initial setup ---
-populateUnitDropdowns(typeSelect.value);
+// Load history on page load
+fetchHistory();

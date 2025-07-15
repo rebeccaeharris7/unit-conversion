@@ -1,40 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Unit Converter</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css"/>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 2rem; }
-        .converter { max-width: 400px; margin: auto; padding: 2rem; border: 1px solid #ccc; border-radius: 8px; }
-        .row { display: flex; align-items: center; margin-bottom: 1rem; }
-        .row label { min-width: 80px; }
-        .row input, .row select { flex: 1; padding: 0.5rem; margin-left: 0.5rem; }
-        .title { text-align: center; margin-bottom: 1.5rem; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Unit Converter with History</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="converter">
-        <div class="title"><h2>Unit Converter</h2></div>
-        <div class="row">
-            <label for="type">Type:</label>
-            <select id="type">
-                <option value="length">Length</option>
-                <option value="volume">Volume</option>
-            </select>
-        </div>
-        <div class="row">
-            <label for="fromValue">From:</label>
-            <input type="number" id="fromValue" min="0" step="any" autocomplete="off"/>
-            <select id="fromUnit"></select>
-        </div>
-        <div class="row">
-            <label for="toValue">To:</label>
-            <input type="number" id="toValue" min="0" step="any" autocomplete="off"/>
-            <select id="toUnit"></select>
-        </div>
-    </div>
-    <script src="main.js"></script>
+  <h1>Unit Converter</h1>
+  <form id="convert-form">
+    <label>
+      Type:
+      <select id="type">
+        <option value="length">Length</option>
+        <option value="volume">Volume</option>
+      </select>
+    </label>
+    <label>
+      From:
+      <select id="fromUnit"></select>
+    </label>
+    <label>
+      To:
+      <select id="toUnit"></select>
+    </label>
+    <label>
+      Value:
+      <input type="number" id="value" step="any" required>
+    </label>
+    <button type="submit">Convert</button>
+  </form>
+  <div id="result"></div>
+
+  <h2>Conversion History</h2>
+  <ul id="history"></ul>
+
+  <script src="main.js"></script>
 </body>
 </html>
