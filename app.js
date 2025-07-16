@@ -5,6 +5,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 1. Connect to SQLite DB or create it if not exists
+// SQLite DB setup (for saving conversions)
 const db = new sqlite3.Database('./conversions.db');
 
 // 2. Create the conversions table if it doesn't exist yet
@@ -16,7 +17,6 @@ db.run(`
     toUnit TEXT,
     inputValue REAL,
     result REAL,
-    direction TEXT,
     ts DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
@@ -40,7 +40,7 @@ const conversionRates = {
   }
 };
 
-// 4. Conversion endpoint (does math, saves to DB)
+// 4. Conversion endpoint (only does math, does not save)
 app.post('/api/convert', (req, res) => {
   const { type, fromUnit, toUnit, value, direction } = req.body;
   if (!type || !fromUnit || !toUnit || isNaN(value)) {
@@ -55,24 +55,33 @@ app.post('/api/convert', (req, res) => {
   }
   result = +result.toFixed(6);
 
-  // Save conversion to DB
+  res.json({ result });
+});
+
+// 5. Save conversion to DB (triggered by Convert button)
+app.post('/api/save', (req, res) => {
+  const { type, fromUnit, toUnit, inputValue, result } = req.body;
+  if (!type || !fromUnit || !toUnit || isNaN(inputValue) || isNaN(result)) {
+    return res.status(400).json({ error: "Invalid input" });
+  }
   db.run(
-    `INSERT INTO conversions (type, fromUnit, toUnit, inputValue, result, direction)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [type, fromUnit, toUnit, value, result, direction],
+    `INSERT INTO conversions (type, fromUnit, toUnit, inputValue, result)
+     VALUES (?, ?, ?, ?, ?)`,
+    [type, fromUnit, toUnit, inputValue, result],
     function(err) {
       if (err) {
         console.error("DB Error:", err);
+        return res.status(500).json({ error: "Database error" });
       }
-      res.json({ result });
+      res.json({ saved: true });
     }
   );
 });
 
-// 5. History endpoint (get last 10 conversions)
+// 6. History endpoint (get last 10 conversions)
 app.get('/api/history', (req, res) => {
   db.all(
-    `SELECT id, type, fromUnit, toUnit, inputValue, result, direction, ts
+    `SELECT id, type, fromUnit, toUnit, inputValue, result, ts
      FROM conversions
      ORDER BY ts DESC
      LIMIT 10`,
@@ -86,7 +95,7 @@ app.get('/api/history', (req, res) => {
   );
 });
 
-// 6. Start server
+// 7. Start server
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
