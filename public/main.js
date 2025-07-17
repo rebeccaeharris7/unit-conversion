@@ -3,19 +3,61 @@ const units = {
   volume: ["liter", "milliliter", "cup", "gallon"]
 };
 
+const unitDefinitions = {
+  volume: {
+    units: [
+      { value: "fl_oz", label: "Fluid ounce" },
+      { value: "cup", label: "Cup" },
+      { value: "pint", label: "Pint" },
+      { value: "quart", label: "Quart" },
+      { value: "gallon", label: "Gallon" },
+      { value: "tablespoon", label: "Tablespoon" },
+      { value: "teaspoon", label: "Teaspoon" },
+      { value: "ml", label: "Milliliter" },
+      { value: "l", label: "Liter" },
+    ],
+    defaultFromUnit: "tablespoon",
+    defaultToUnit: "cup",
+    defaultFromValue: "16",
+    defaultToValue: "1",
+  },
+  length: {
+    units: [
+      { value: "cm", label: "Centimeter" },
+      { value: "inch", label: "Inch" },
+      { value: "foot", label: "Foot" },
+      { value: "yard", label: "Yard" },
+      { value: "mile", label: "Mile" },
+      { value: "mm", label: "Millimeter" },
+      { value: "m", label: "Meter" },
+      { value: "km", label: "Kilometer" },
+    ],
+    defaultFromUnit: "cm",
+    defaultToUnit: "inch",
+    defaultFromValue: "10",
+    defaultToValue: "3.93701",
+  }, 
+}
+
 let lastConversion = null;
 
 // Populate unit options
 function populateUnitOptions(type) {
   const fromSelect = document.getElementById('fromUnit');
   const toSelect = document.getElementById('toUnit');
+  const fromValue = document.getElementById("fromValue");
+  const toValue = document.getElementById("toValue");
   fromSelect.innerHTML = '';
   toSelect.innerHTML = '';
-  units[type].forEach(unit => {
-    fromSelect.innerHTML += `<option value="${unit}">${unit}</option>`;
-    toSelect.innerHTML += `<option value="${unit}">${unit}</option>`;
+  unitDefinitions[type].units.forEach(unit => {
+    fromSelect.innerHTML += `<option value="${unit.value}">${unit.label}</option>`;
+    toSelect.innerHTML += `<option value="${unit.value}">${unit.label}</option>`;
   });
-  toSelect.selectedIndex = 1;
+  // toSelect.selectedIndex = 1;
+  fromValue.value = unitDefinitions[type].defaultFromValue;
+  toValue.value = unitDefinitions[type].defaultToValue;
+  fromSelect.value = unitDefinitions[type].defaultFromUnit;
+  toSelect.value = unitDefinitions[type].defaultToUnit;
 }
 
 document.getElementById('type').addEventListener('change', e => {
@@ -23,7 +65,7 @@ document.getElementById('type').addEventListener('change', e => {
   triggerConversion("from");
 });
 
-populateUnitOptions('length');
+populateUnitOptions('volume');
 
 // Conversion logic (bi-directional)
 async function triggerConversion(direction) {
