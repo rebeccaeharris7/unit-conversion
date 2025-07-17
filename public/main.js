@@ -1,8 +1,3 @@
-const units = {
-  length: ["meter", "kilometer", "foot", "mile"],
-  volume: ["liter", "milliliter", "cup", "gallon"]
-};
-
 const unitDefinitions = {
   volume: {
     units: [
@@ -74,7 +69,7 @@ async function triggerConversion(direction) {
   const toUnit = document.getElementById('toUnit').value;
   let fromValue = parseFloat(document.getElementById('fromValue').value);
   let toValue = parseFloat(document.getElementById('toValue').value);
-
+  
   if (fromUnit === toUnit || (!fromValue && !toValue)) {
     document.getElementById('message').textContent = "";
     lastConversion = null;
